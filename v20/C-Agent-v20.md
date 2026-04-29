@@ -5,7 +5,7 @@
 > **Fecha:** 29-04-2026 
 
 <!-- Estilos globales para tablas -->
-<style>
+<!-- <style>
   /* Estilos para thead */
   thead {
     background-color: black;
@@ -47,7 +47,7 @@
     background-color: black;
     color:white;
   }
-</style>
+</style> -->
 ---
 ## Prerrequisitos
 - Instalar [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Elige la versión correspondiente a tu SO)
