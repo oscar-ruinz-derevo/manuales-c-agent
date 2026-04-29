@@ -1,6 +1,7 @@
 # Manual: Implementación C-Agent
 > **Versión:** v20  
 > **Fecha:** 29-04-2026 
+
 <!-- Estilos globales para tablas -->
 <style>
   /* Estilos para thead */
