@@ -680,7 +680,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
 > Las demás configuraiones (Access configuration, Networking, etc) se dejan con sus valores por defecto.
 
 #### Plantilla para secretos
-🟠 Solo se configura si son necesarios con ese agente.
+🟠 Solo se configura si son necesarios con ese agente. <br>
 🟡 Obsoletos, no necesarios en esta versión.
 
 <table>
@@ -692,7 +692,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
   </thead>
   <tbody>
     <tr class="secret-optional">
-      <td>AI-SEARCH-SERVICE-KEYY</td>
+      <td>🟠AI-SEARCH-SERVICE-KEYY</td>
       <td>"YOUR_VALUE_HERE"</td>
     </tr>
 	  <tr>
@@ -703,7 +703,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
 	    </td>
     </tr>
     <tr class="secret-optional">
-      <td>APP-PASSWORD</td>
+      <td>🟠APP-PASSWORD</td>
       <td>"none"</td>
     </tr>
     <tr>
@@ -749,7 +749,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       </td>
     </tr>
     <tr class="secret-deprecated">
-      <td>AZURE-OPENAI-API-KEY2</td>
+      <td>🟡AZURE-OPENAI-API-KEY2</td>
       <td>"YOUR_VALUE_HERE",</td>
     </tr>
     <tr>
@@ -760,7 +760,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       </td>
     </tr>
     <tr class="secret-deprecated">
-      <td>AZURE-OPENAI-ENDPOINT2</td>
+      <td>🟡AZURE-OPENAI-ENDPOINT2</td>
       <td>"YOUR_VALUE_HERE",</td>
     </tr>
     <tr>
@@ -771,7 +771,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       </td>
     </tr>
     <tr class="secret-deprecated">
-      <td>AZURE-OPENAI-MODEL-NAME2</td>
+      <td>🟡AZURE-OPENAI-MODEL-NAME2</td>
       <td>"YOUR_VALUE_HERE",</td>
     </tr>
     <tr>
@@ -782,11 +782,11 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       </td>
     </tr>
     <tr class="secret-optional">
-      <td>AZURE-SEARCH-API-VERSIONN</td>
+      <td>🟠AZURE-SEARCH-API-VERSIONN</td>
       <td>"YOUR_VALUE_HERE",</td>
     </tr>
     <tr class="secret-optional">
-      <td>AZURE-SEARCH-ENDPOINTT</td>
+      <td>🟠AZURE-SEARCH-ENDPOINTT</td>
       <td>"YOUR_VALUE_HERE",</td>
     </tr>
     <tr>
