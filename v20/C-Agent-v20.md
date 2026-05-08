@@ -325,6 +325,7 @@ docker push [URL_servidor]/[Id_Nombre]:v[Version]
 ## Creación de recursos
 ### Web App
 En la búsqueda del recurso debe aparecer un elemento justo como lo siguiente:
+
 ![Create Web App](../Imagenes/Global/create-webapp.png)
 
 Una vez al darle “_Create_”, nos va a dirigir a la siguiente pantalla:
@@ -1403,3 +1404,100 @@ Acceda al portal de administración: [Developer Portal for Teams](https://dev.te
 ![App Validation](../Imagenes/Global/app-validation.png)
 ![Start Validation](../Imagenes/Global/start-validation.png)
 ![App Validation Menu](../Imagenes/Global/app-validation-menu.png)
+
+---
+
+# Cambios V20
+
+## Configuración: Exportación de CSV a SharePoint y Teams card
+
+Esta característica carga resultados completos de consultas como CSV a una biblioteca de documentos de SharePoint usando **Microsoft Graph** (application-only / client credentials), crea un **enlace compartido** para que los usuarios puedan abrir el archivo, y adjunta una **Localized Adaptive Card** en Teams con acciones de “Abrir en SharePoint” y “Descargar CSV”.
+
+### Componentes
+
+<table>
+  <thead>
+    <tr>
+      <th>Componente</th>
+      <th>Función</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>sharepoint_upload.py</code></td>
+      <td>Carga <code>PUT</code> de Graph a la ruta del drive del sitio, luego <code>createLink</code> para un enlace de vista (Alcance de <code>organization</code> o <code>anonymous</code>).</td>
+    </tr>
+    <tr>
+      <td><code>DatabasePlugin.py</code> (<code>ConsultDatabasePlugin</code>)</td>
+      <td>Cuando <code>build_csv</code> está habilitado y <code>csv_export_target</code> es <code>sharepoint</code>, construye CSV y llama a <code>upload_csv_to_sharepoint</code>; rellena <code>url_sharepoint_results</code> en el JSON de la herramienta.</td>
+    </tr>
+    <tr>
+      <td><code>StructuredData_Agent.py</code></td>
+      <td>Pasa configuraciones de SharePoint desde <code>agents_config</code> + Key Vault a <code>ConsultDatabasePlugin</code>.</td>
+    </tr>
+    <tr>
+      <td><code>key_vault_config.py</code></td>
+      <td>Carga secretos <code>SHAREPOINT-EXPORT-*</code> en <code>CONFIG_KEY_VAULT</code>.</td>
+    </tr>
+    <tr>
+      <td><code>cagent/cagent_message_turn.py</code> + <code>cagent/cagent_teams_ui.py</code></td>
+      <td>Después de la orquestación, extrae URLs de SharePoint del trace (con <code>extract_sharepoint_export_urls</code>) e incluye en la <b>unified</b> Adaptive Card de insight (<code>build_unified_answer_insight_card</code>). El helper independiente <code>build_sharepoint_export_adaptive_card</code> en <code>sharepoint_card_i18n.py</code> se mantiene para reutilización.</td>
+    </tr>
+    <tr>
+      <td><code>sharepoint_card_i18n.py</code></td>
+      <td>Resuelve idioma de UI (translator hint, código ISO, fallback <code>langdetect</code>) y construye strings/payloads de card localizados.</td>
+    </tr>
+    <tr>
+      <td><code>sharepoint_card_locales.json</code></td>
+      <td>Strings traducibles por locale (<code>title</code>, <code>description</code>, <code>open</code>, <code>download</code>).</td>
+    </tr>
+  </tbody>
+</table>
+
+### Configuración
+
+#### Azure Key Vault (registro de aplicación)
+
+Secretos (los nombres deben coincidir con `key_vault_config.py`):
+
+- `SHAREPOINT-EXPORT-TENANT-ID` — ID del directorio (tenant)  
+- `SHAREPOINT-EXPORT-CLIENT-ID` — ID de aplicación (cliente)  
+- `SHAREPOINT-EXPORT-CLIENT-SECRET` — Secreto del cliente  
+- `SHAREPOINT-EXPORT-SITE-ID` — ID de sitio de Graph por defecto opcional (`hostname,guid,guid`)
+
+La aplicación necesita permisos de aplicación de Graph apropiados para **upload + createLink** en el sitio destino (p. ej. `Sites.Selected` con acceso otorgado por administrador al sitio, o permisos más amplios de archivo/sitio según su política).
+
+#### `agents_config.json` (StructuredData agent)
+
+Claves típicas:
+
+- `"build_csv": "True"`  
+- `"csv_export_target": "sharepoint"`  
+- `"sharepoint_site_id": "contoso.sharepoint.com,..."` — Anula el ID de sitio de KV si está establecido  
+- `"sharepoint_folder_path": "CAgentExports"` — Carpeta bajo la biblioteca de documentos **default** (debe existir)  
+- `"sharepoint_share_link_type": "view"` — Tipo de enlace de Graph  
+- `"sharepoint_share_link_scope": "organization"` — O `"anonymous"` si lo permite el tenant  
+
+### Flujo de ejecución
+
+1. El usuario hace una pregunta; el idioma se detecta (`input_language`) y `user_question_raw` se mantiene para localización de card.
+2. Se ejecuta la orquestación; `consult_database` puede cargar CSV y devolver JSON incluyendo `url_sharepoint_results`.
+3. `cagent_message_turn.py` (vía `cagent_teams_ui.extract_sharepoint_export_urls`) analiza la string de orquestación para esas URLs (y fallback regex para enlaces `*.sharepoint.com`).
+4. Teams recibe una **single** unified Adaptive Card attachment que incluye acciones de SharePoint (variante de enlace abierto + descarga) junto con gráficos, exportaciones blob y razonamiento opcional.
+5. Strings de card utilizan `sharepoint_card_i18n.resolve_sharepoint_card_locale(language_hint, user_message)`.
+
+### Extensión de locales
+
+1. Agregue un nuevo objeto bajo `locales` en `sharepoint_card_locales.json` (mismas claves que `en`).
+2. Si el traductor devuelve un **nuevo nombre en inglés** (p. ej. `KOREAN`), agregue un mapeo en `sharepoint_card_i18n._NAME_TO_LOCALE`, o devuelva un código ISO (`ko`) del traductor en su lugar.
+
+### Funciones kernel sincrónicas y threading
+
+`consult_database` se ejecuta en Semantic Kernel’s sync invocation path (a menudo un thread pool). El consentimiento de SharePoint se implementó previamente con `ContextVar` y no era confiable; el consentimiento se removió y la exportación es incondicional cuando `csv_export_target` es `sharepoint` y la configuración está completa.
+
+---
+
+## Cambios en el agente de texto
+
+> [!IMPORTANT]
+> El agente de texto ahora es multiíndice.
