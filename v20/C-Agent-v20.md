@@ -1500,4 +1500,4 @@ Claves típicas:
 ## Cambios en el agente de texto
 
 > [!IMPORTANT]
-> El agente de texto ahora es multiíndice.
+> El agente de texto es **Multi Source** de **AI Search** definiendo los secretos en conjunto con el campo de `conn_prefix` en `agents config`.
