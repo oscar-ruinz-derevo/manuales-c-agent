@@ -55,6 +55,8 @@
 
 El uso de docker será para el despliegue o actualizaciones para el C-Agent en casos particulares. En otras palabras, algún cambio en su funcionamiento, para modificar el proyecto será necesario el uso de comandos que nos permiten el despliegue una nueva imagen.
 
+Una vez instalado el docker, no es necesario iniciar sesión. Solo es necesario mantenerlo abierto cuando se hace el build y el push de la imagen.
+
 ---
 
 ## Recursos necesarios
@@ -295,11 +297,14 @@ Permite recopilar, almacenar, consultar y analizar datos de diagnóstico y telem
 ## Creación de imagen
 ### Prerrequisitos:
 - Necesitaremos haber creado previamente el recurso “Container Registry”. Esta es la imagen que se carga en el recurso "Web App”.
-	- Necesitamos obtener la URL del servidor y el usuario/contraseña del "Container Registry"
+	- Necesitamos obtener la URL del servidor y el usuario/contraseña del "Container Registry" 
 	- Accedemos a estos datos ingresando al recurso "Container Registry" y luego al apartado "Configuraciones/Llaves de acceso"
+ 	- Especificamente accedemos a "Settings", luego a "Acces Keys". Darle click para que aparezca la palomita en "admin user". Ahí aparecera el nombre del servidor, username y password.  
 - Clonar el código del C-Agent del repositorio en local.
 
 Es necesario acceder al código. Iniciar sesión al servidor de Azure, crear la imagen (build) y luego cargarla (push).
+
+
 ### Comandos
 
 `````bash
@@ -679,6 +684,8 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
 
 > [!NOTE]
 > Las demás configuraiones (Access configuration, Networking, etc) se dejan con sus valores por defecto.
+> Es posible que no aparezca nada al querer crear secretos, o que no se cuenten con los permisos necesarios. En ese caso, contactar con arquitectura para que se les den los permisos necesarios.
+> Tratar de configurar los secretos al final, una vez que todos los demás recursos esten configurados, para tener todos los valores disponibles.
 
 #### Plantilla para secretos
 🟠 Solo se configura si son necesarios con ese agente. <br>
@@ -714,7 +721,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
     <tr>
       <td>AZURE-COSMOSDB-CONTAINER-HISTORY-NAME</td>
       <td>
-        "YOUR_VALUE_HERE",<br>
+        "YOUR_VALUE_HERE", CosmosDB -  Data Explorer - Nombre del container de history. Ejemplo:<br>
         cagent_history_dev <br>
         cagent_history_prod
       </td>
@@ -730,21 +737,21 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
     <tr>
       <td>AZURE-COSMOSDB-DATABASE-HISTORY-NAME</td>
       <td> 
-        "YOUR_VALUE_HERE", <br>
+        "YOUR_VALUE_HERE", CosmosDB -  Data Explorer - Nombre del database de history. Ejemplo:<br>
         History
       </td>
     </tr>
     <tr>
       <td>AZURE-COSMOSDB-DATABASE-REACTIONS-NAME</td>
       <td> 
-        "YOUR_VALUE_HERE", <br>
+        "YOUR_VALUE_HERE", CosmosDB -  Data Explorer - Nombre del database de reactions. Ejemplo:<br>
         Reactions
       </td>
     </tr>
     <tr>
       <td>AZURE-COSMOSDB-CONTAINER-REACTIONS-NAME</td>
       <td> 
-        "YOUR_VALUE_HERE", <br>
+        "YOUR_VALUE_HERE", CosmosDB -  Data Explorer - Nombre del container de reactions. Ejemplo:<br>
         cagent_reactions_dev <br>
         cagent_reactions_prod
       </td>
@@ -757,7 +764,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       <td>AZURE-OPENAI-API-KEYY</td>
       <td>
         YOUR_VALUE_HERE", <br>
-        Foundry → Foundry Portal → Mis recursos → Modelos + Puntos de conexión → Clave
+        Foundry → Foundry Portal → Recursos compartido → Implementaciones → Modelo que estemos utilizando → Clave
       </td>
     </tr>
     <tr class="secret-deprecated">
@@ -768,7 +775,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       <td>AZURE-OPENAI-ENDPOINTT</td>
       <td>
         YOUR_VALUE_HERE", <br>
-        Foundry → Foundry Portal → Mis recursos → Modelos + Puntos de conexión → URI
+        Foundry → Foundry Portal → Recursos compartido → Implementaciones → Modelo que estemos utilizando → URI
       </td>
     </tr>
     <tr class="secret-deprecated">
@@ -779,7 +786,7 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
       <td>AZURE-OPENAI-MODEL-NAMEE</td>
       <td>
         YOUR_VALUE_HERE", <br>
-        Foundry → Foundry Portal → Mis recursos → Modelos + Puntos de conexión → Nombre del modelo que estemos utilzando.
+        Foundry → Foundry Portal → Recursos compartidos → Implementaciones → Nombre del modelo que estemos utilzando. ejemplo: gpt-4.1.
       </td>
     </tr>
     <tr class="secret-optional">
@@ -818,8 +825,8 @@ Una vez al darle `Create`, nos va a dirigir a la siguiente pantalla:
         Azure Bot → Settings → Configuration → App Tenant ID
       </td>
     </tr>
-    <tr>
-      <td>OPENAI-SERVICE-IDD</td>
+  	<tr class="secret-deprecated">
+      <td>🟡OPENAI-SERVICE-IDD</td>
       <td>"YOUR_VALUE_HERE",</td>
     </tr>
     <tr>
@@ -894,7 +901,7 @@ Solo puede hacerlo el administrador del entorno de Fabric.
 Ir al área de trabajo y seleccionar `Manage access`.
 ![Fabric - Manage Access](../Imagenes/Global/fabric-manage-access.png)
 
-Hay que añadir el App Service Plan.
+Hay que añadir el nombre de la web app, de preferencia buscar el App ID, que probablemente cambio su nombre a Object ID. Se puede encontrar en Web app - Settings - Identity .
 ![Fabric - Add App Service Plan](../Imagenes/Global/fabric-add-service-plan.png)
 
 ---
@@ -1229,6 +1236,8 @@ Una vez dentro del recurso Cosmos DB recién creado, diríjase al **Data Explore
 1. Database id: Asigne un nombre a la base de datos o seleccione una existente.
 2. Container id: Ingrese un identificador único para el nuevo contenedor.
 3. Partition key* Debe ser obligatoriamente `/user_id`.
+
+Al final, se crea una database, y cada databse pueden tener varios contenderos. Se crea una database para el History y otra para las reacciones. Como práctica, se puede crear un contenedor para la History de dev y otro para la producción. De igual manera se pueden crear dos contenedores para las reacciones, para dev y para prod. Los secretos del Key Vault llevan el nombre de estos contenedores y databases. 
 
 Puede verificar estos nombres y valores en el recurso **Key Vault**. Para ello, vaya a la sección **Secrets**, seleccione el secreto deseado (por ejemplo, `AZURE-COSMOSDB-CONTAINER-NAME`), haga clic en la versión actual y seleccione **Show secret value**.
 
